@@ -1,0 +1,62 @@
+{
+    "name": "gadwinn/doc-to-pdf",
+    "description": "Fill HTML (Twig), ODT and ODS templates with data and convert them to PDF with mPDF or LibreOffice.",
+    "type": "library",
+    "minimum-stability": "stable",
+    "license": "MIT",
+    "prefer-stable": true,
+    "autoload": {
+        "psr-4": {
+            "G\\DocToPdf\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "G\\DocToPdf\\Tests\\": "tests/"
+        }
+    },
+    "require": {
+        "php": ">=8.3",
+        "ext-fileinfo": "*",
+        "ext-zip": "*",
+        "twig/twig": "^3.0",
+        "sboden/odtphp": "^3.0",
+        "mpdf/mpdf": "^8.0"
+    },
+    "require-dev": {
+        "roave/security-advisories": "dev-latest@dev",
+        "phpdocumentor/shim": "*",
+        "phpstan/phpstan": "*",
+        "phpunit/phpunit": "*",
+        "povils/phpmnd": "*",
+        "squizlabs/php_codesniffer": "*"
+    },
+    "config": {
+        "allow-plugins": {
+            "phpdocumentor/shim": true
+        }
+    },
+    "scripts": {
+        "install-prod": "composer install --no-dev --classmap-authoritative",
+        "gen-doc": "php vendor/bin/phpdoc -d src -t docs/phpdoc",
+        "test-all": [
+            "@test-cs",
+            "@test-stan",
+            "@test-unit"
+        ],
+        "test-cs": "php vendor/bin/phpcs",
+        "test-stan": "php -d memory_limit=512M vendor/bin/phpstan",
+        "test-unit": "php vendor/bin/phpunit --no-coverage",
+        "test-mnd": "php vendor/bin/phpmnd ./src --hint --progress --strings --extensions=assign,operation,return,condition,switch_case --ignore-numbers=0,1,2,4"
+    },
+    "scripts-descriptions": {
+        "install-prod": "Install dependencies for production environment",
+        "gen-doc": "Generate API documentation using PHPDoc",
+        "test-all": "Run the complete test suite including all quality checks",
+        "security-audit": "Check for security vulnerabilities in dependencies",
+        "test-cs": "Run code style checks using PHP_CodeSniffer",
+        "test-stan": "Run static analysis using PHPStan",
+        "test-unit": "Run unit tests with PHPUnit",
+        "test-mnd": "Detect magic numbers in the codebase"
+    }
+}
