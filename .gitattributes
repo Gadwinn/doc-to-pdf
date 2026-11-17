@@ -8,3 +8,4 @@
 /phpstan.*       export-ignore
 /phpunit.*       export-ignore
 /README.[Mm][Dd] export-ignore
+/examples         export-ignore
