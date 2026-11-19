@@ -6,6 +6,8 @@ namespace G\DocToPdf\Tests;
 
 use G\DocToPdf\Exception\DocToPdfException;
 use G\DocToPdf\Pdf;
+use G\DocToPdf\Tests\Stub\ResponseFactory;
+use G\DocToPdf\Tests\Stub\StreamFactory;
 use PHPUnit\Framework\TestCase;
 
 class PdfTest extends TestCase
@@ -119,6 +121,70 @@ class PdfTest extends TestCase
         
         // Note: In a real browser context, headers would be sent
         // Testing headers requires integration/functional tests
+    }
+
+    public function testOutputRejectsAnInvalidDisposition(): void
+    {
+        $this->expectException(DocToPdfException::class);
+
+        ob_start();
+        try {
+            (new Pdf('%PDF-1.4'))->output('a.pdf', 'download');
+        } finally {
+            ob_end_clean();
+        }
+    }
+
+    public function testToResponseCarriesThePdf(): void
+    {
+        $content = '%PDF-1.4 response test';
+
+        $response = (new Pdf($content))->toResponse(new ResponseFactory(), new StreamFactory());
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame('application/pdf', $response->getHeaderLine('Content-Type'));
+        $this->assertSame((string) strlen($content), $response->getHeaderLine('Content-Length'));
+        $this->assertSame('inline; filename="document.pdf"', $response->getHeaderLine('Content-Disposition'));
+        $this->assertSame('private, max-age=0, must-revalidate', $response->getHeaderLine('Cache-Control'));
+        $this->assertSame($content, (string) $response->getBody());
+    }
+
+    public function testToResponseAsAttachment(): void
+    {
+        $response = (new Pdf('%PDF-1.4'))->toResponse(new ResponseFactory(), new StreamFactory(), 'invoice-42.pdf', Pdf::ATTACHMENT);
+
+        $this->assertSame('attachment; filename="invoice-42.pdf"', $response->getHeaderLine('Content-Disposition'));
+    }
+
+    /**
+     * @return array<string, array{string, string}>
+     */
+    public static function filenameProvider(): array
+    {
+        return [
+            'non-ASCII name'      => ['facture-été.pdf', "inline; filename=\"facture-_t_.pdf\"; filename*=UTF-8''facture-%C3%A9t%C3%A9.pdf"],
+            'quotes removed'      => ['a"b.pdf', 'inline; filename="ab.pdf"'],
+            'path removed'        => ['../../etc/report.pdf', 'inline; filename="report.pdf"'],
+            'Windows path'        => ['C:\\docs\\report.pdf', 'inline; filename="report.pdf"'],
+            'header injection'    => ["a.pdf\r\nX-Evil: 1", 'inline; filename="a.pdfX-Evil: 1"'],
+            'empty name'          => ['', 'inline; filename="document.pdf"'],
+        ];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('filenameProvider')]
+    public function testToResponseFilename(string $filename, string $expected): void
+    {
+        $response = (new Pdf('%PDF-1.4'))->toResponse(new ResponseFactory(), new StreamFactory(), $filename);
+
+        $this->assertSame($expected, $response->getHeaderLine('Content-Disposition'));
+    }
+
+    public function testToResponseRejectsAnInvalidDisposition(): void
+    {
+        $this->expectException(DocToPdfException::class);
+        $this->expectExceptionMessage('Invalid disposition "download"');
+
+        (new Pdf('%PDF-1.4'))->toResponse(new ResponseFactory(), new StreamFactory(), 'a.pdf', 'download');
     }
 
     public function testSaveEmptyContent(): void
