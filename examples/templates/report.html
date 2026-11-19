@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <style>
+        body { font-family: DejaVu Sans, sans-serif; font-size: 10pt; color: #222; }
+        h1 { font-size: 22pt; color: #1f3b57; margin-bottom: 0; }
+        .subtitle { color: #777; margin-bottom: 20px; }
+        h2 { font-size: 14pt; color: #1f3b57; border-bottom: 1px solid #1f3b57; padding-bottom: 3px; margin-top: 24px; }
+        .kpis { width: 100%; border-collapse: separate; border-spacing: 8px; }
+        .kpis td { background: #eef3f8; padding: 10px; text-align: center; width: 25%; }
+        .kpis .value { font-size: 16pt; font-weight: bold; color: #1f3b57; }
+        .kpis .label { color: #555; font-size: 8pt; }
+        .data { width: 100%; border-collapse: collapse; }
+        .data th { background: #1f3b57; color: #fff; padding: 5px; text-align: left; }
+        .data td { padding: 5px; border-bottom: 1px solid #ddd; }
+        .data tr:nth-child(even) td { background: #f7f7f7; }
+        .num, .data th.num { text-align: right; }
+        .up { color: #1e7d32; }
+        .down { color: #b3261e; }
+    </style>
+</head>
+<body>
+    {# mPDF reads these tags: page numbers in the footer of every page #}
+    <htmlpagefooter name="footer">
+        <div style="text-align: right; font-size: 8pt; color: #777;">{{ title }} · page {PAGENO} / {nbpg}</div>
+    </htmlpagefooter>
+    <sethtmlpagefooter name="footer" value="on" />
+
+    <h1>{{ title }}</h1>
+    <div class="subtitle">{{ period }}</div>
+
+    <table class="kpis">
+        <tr>
+            {% for kpi in kpis %}
+                <td>
+                    <div class="value">{{ kpi.value }}</div>
+                    <div class="label">{{ kpi.label }}</div>
+                </td>
+            {% endfor %}
+        </tr>
+    </table>
+
+    {% for section in sections %}
+        <h2>{{ section.title }}</h2>
+        {% if section.text is defined %}
+            <p>{{ section.text }}</p>
+        {% endif %}
+
+        {% if section.rows is defined %}
+            <table class="data">
+                <tr>
+                    <th>{{ section.columns[0] }}</th>
+                    <th class="num">{{ section.columns[1] }}</th>
+                    <th class="num">{{ section.columns[2] }}</th>
+                </tr>
+                {% for row in section.rows %}
+                    <tr>
+                        <td>{{ row.name }}</td>
+                        <td class="num">{{ row.value|number_format(0, '.', ' ') }}</td>
+                        <td class="num {{ row.change >= 0 ? 'up' : 'down' }}">
+                            {{ row.change >= 0 ? '+' : '' }}{{ row.change|number_format(1) }} %
+                        </td>
+                    </tr>
+                {% endfor %}
+            </table>
+        {% endif %}
+    {% endfor %}
+</body>
+</html>

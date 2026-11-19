@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="{{ lang|default('en') }}">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <style>
+        body { font-family: DejaVu Sans, sans-serif; font-size: 11pt; color: #222; margin: 30px; }
+        h1 { font-size: 20pt; color: #1f3b57; margin-bottom: 4px; }
+        .date { color: #777; margin-bottom: 24px; }
+        p { line-height: 1.5; }
+        .signature { margin-top: 40px; }
+    </style>
+</head>
+<body>
+    <h1>{{ title }}</h1>
+    <div class="date">{{ date }}</div>
+
+    {% for paragraph in paragraphs %}
+        <p>{{ paragraph }}</p>
+    {% endfor %}
+
+    {% if author is defined %}
+        <div class="signature">{{ author }}</div>
+    {% endif %}
+</body>
+</html>

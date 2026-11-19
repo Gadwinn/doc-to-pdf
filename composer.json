@@ -21,7 +21,9 @@
         "ext-zip": "*",
         "twig/twig": "^3.0",
         "sboden/odtphp": "^3.0",
-        "mpdf/mpdf": "^8.0"
+        "mpdf/mpdf": "^8.0",
+        "psr/http-factory": "^1.0",
+        "psr/http-message": "^1.1 || ^2.0"
     },
     "require-dev": {
         "roave/security-advisories": "dev-latest@dev",

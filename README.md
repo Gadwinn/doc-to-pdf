@@ -96,15 +96,23 @@ Template (`invoice.html`):
 
 ### Output to Browser
 
+In a PSR-15 application or a long-running worker (FrankenPHP, RoadRunner...),
+return a PSR-7 response, built with any PSR-17 factories:
+
 ```php
-$converter = new PdfConverter('template.html');
-$pdf = $converter->render(['name' => 'John']);
+use G\DocToPdf\Pdf;
 
-// For download
-$pdf->output('document.pdf', 'attachment');
+$pdf = (new PdfConverter('template.html'))->render(['name' => 'John']);
 
-// For inline viewing
-$pdf->output('document.pdf', 'inline');
+return $pdf->toResponse($responseFactory, $streamFactory, 'document.pdf', Pdf::ATTACHMENT); // download
+return $pdf->toResponse($responseFactory, $streamFactory);                                  // inline viewing
+```
+
+In a plain PHP script, `output()` sends the headers and the content itself:
+
+```php
+$pdf->output('document.pdf', Pdf::ATTACHMENT); // download
+$pdf->output();                                // inline viewing, "document.pdf"
 ```
 
 ## Advanced Usage
@@ -196,6 +204,8 @@ Check the `examples/` directory for complete working examples:
 - `03-invoice.php` - Complex invoice with loops, conditions, and calculations
 - `04-browser-output.php` - Sending PDF directly to browser
 - `05-generator-selection.php` - Testing different PDF generators
+- `06-templates.php` - Renders the ready-made templates of `examples/templates/`
+  (`simple.html`, `invoice.html`, `report.html`), a starting point for your own
 
 Run examples:
 ```bash
@@ -254,17 +264,34 @@ public function save(string $filePath): void
 
 Save PDF to file.
 
+#### toResponse()
+
+```php
+public function toResponse(
+    ResponseFactoryInterface $responseFactory,
+    StreamFactoryInterface $streamFactory,
+    string $filename = 'document.pdf',
+    string $disposition = Pdf::INLINE,
+): ResponseInterface
+```
+
+PSR-7 response carrying the PDF (`Content-Type`, `Content-Length`,
+`Content-Disposition`, no caching).
+
+**Parameters:**
+- `$filename` - Filename for browser; its directory part, quotes and control
+  characters are removed, a non-ASCII name is also sent as `filename*` (RFC 6266)
+- `$disposition` - `Pdf::INLINE` (view) or `Pdf::ATTACHMENT` (download);
+  anything else throws `DocToPdfException`
+
 #### output()
 
 ```php
-public function output(string $filename, string $disposition = 'inline'): void
+public function output(string $filename = 'document.pdf', string $disposition = Pdf::INLINE): void
 ```
 
-Send PDF to browser.
-
-**Parameters:**
-- `$filename` - Filename for browser
-- `$disposition` - `'inline'` (view) or `'attachment'` (download)
+Send PDF to browser: same headers as `toResponse()`, sent with `header()`, then
+the content. For plain PHP scripts only.
 
 #### getContent()
 
@@ -303,8 +330,8 @@ PDF Output
 
 Run tests:
 ```bash
-# All tests
-composer test
+# All checks (security audit, code style, static analysis, tests, magic numbers)
+composer test-all
 
 # Unit tests only
 composer test-unit
@@ -318,8 +345,8 @@ composer test-stan
 # Magic number detection
 composer test-mnd
 
-# Code coverage
-composer test-coverage
+# Code coverage (needs Xdebug)
+composer test-unit-coverage
 ```
 
 ## Security notes
@@ -334,15 +361,3 @@ MIT
 ## Support
 
 For issues and feature requests, please contact the package maintainer.
-
-## Changelog
-
-### v1.0.0 (2024-01-07)
-
-- Initial release
-- HTML to PDF conversion with Twig templating
-- ODT/ODS to PDF conversion with odtphp
-- Dual generator support (mPDF + LibreOffice)
-- Auto format detection
-- Comprehensive test coverage
-
