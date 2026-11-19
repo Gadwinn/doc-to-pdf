@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Invoice {{ invoice.number }}</title>
+    <style>
+        body { font-family: DejaVu Sans, sans-serif; font-size: 10pt; color: #222; margin: 30px; }
+        h1 { font-size: 22pt; color: #1f3b57; margin: 0; }
+        table { width: 100%; border-collapse: collapse; }
+        .parties td { vertical-align: top; width: 50%; padding-bottom: 20px; }
+        .parties .customer { text-align: right; }
+        .meta { color: #555; margin: 6px 0 24px; }
+        .lines th { background: #1f3b57; color: #fff; padding: 6px; text-align: left; }
+        .lines td { padding: 6px; border-bottom: 1px solid #ddd; }
+        .num, .lines th.num { text-align: right; }
+        .lines .total td { border-bottom: none; padding: 4px 6px; }
+        .lines .grand td { font-weight: bold; border-top: 2px solid #1f3b57; }
+        .notes { margin-top: 30px; color: #555; font-size: 9pt; }
+    </style>
+</head>
+<body>
+    <table class="parties">
+        <tr>
+            <td>
+                <h1>INVOICE</h1>
+                <strong>{{ seller.name }}</strong><br>
+                {{ seller.address|nl2br }}
+            </td>
+            <td class="customer">
+                <strong>Bill to</strong><br>
+                {{ customer.name }}<br>
+                {{ customer.address|nl2br }}
+            </td>
+        </tr>
+    </table>
+
+    <div class="meta">
+        No. {{ invoice.number }} · Issued {{ invoice.date }} · Due {{ invoice.due }}
+    </div>
+
+    {% set subtotal = 0 %}
+    <table class="lines">
+        <tr>
+            <th>Description</th>
+            <th class="num">Qty</th>
+            <th class="num">Unit price</th>
+            <th class="num">Amount</th>
+        </tr>
+        {% for line in lines %}
+            {% set amount = line.quantity * line.price %}
+            {% set subtotal = subtotal + amount %}
+            <tr>
+                <td>{{ line.description }}</td>
+                <td class="num">{{ line.quantity }}</td>
+                <td class="num">{{ line.price|number_format(2, '.', ' ') }} {{ currency }}</td>
+                <td class="num">{{ amount|number_format(2, '.', ' ') }} {{ currency }}</td>
+            </tr>
+        {% endfor %}
+        {% set tax = subtotal * tax_rate / 100 %}
+        <tr class="total"><td colspan="3" class="num">Subtotal</td><td class="num">{{ subtotal|number_format(2, '.', ' ') }} {{ currency }}</td></tr>
+        <tr class="total"><td colspan="3" class="num">Tax ({{ tax_rate }} %)</td><td class="num">{{ tax|number_format(2, '.', ' ') }} {{ currency }}</td></tr>
+        <tr class="total grand"><td colspan="3" class="num">Total</td><td class="num">{{ (subtotal + tax)|number_format(2, '.', ' ') }} {{ currency }}</td></tr>
+    </table>
+
+    {% if notes is defined %}
+        <div class="notes">{{ notes }}</div>
+    {% endif %}
+</body>
+</html>
